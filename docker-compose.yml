@@ -1,0 +1,79 @@
+services:
+  h2:
+    build:
+      context: ./docker/h2
+      dockerfile: Dockerfile
+    container_name: auth_h2
+    ports:
+      - "5435:5435"
+      - "9092:9092"
+      - "8082:8082"
+    volumes:
+      - h2_data:/opt/h2-data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 5435 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - auth_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: auth_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+    restart: unless-stopped
+    networks:
+      - auth_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - CORS_ORIGIN=*
+      - H2_HOST=h2
+      - H2_PORT=5435
+      - H2_DATABASE=authdb
+      - H2_USER=sa
+      - H2_PASSWORD=
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - JWT_SECRET=super_secret_jwt_key_auth_app_dev_test_change_in_production_32chars
+      - JWT_EXPIRES_IN=15m
+      - REFRESH_TOKEN_EXPIRES_IN_SECONDS=604800
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX=20
+    depends_on:
+      h2:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - auth_network
+
+volumes:
+  h2_data:
+  redis_data:
+
+networks:
+  auth_network:
+    driver: bridge

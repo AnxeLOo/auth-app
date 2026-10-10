@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+*.log
+coverage/
+data/
+h2-data/
+.DS_Store
+tasks/
+.vercel
