@@ -312,8 +312,16 @@ npx netlify deploy --prod
 
 ---
 
-## 👤 Credenciais Iniciais de Demonstração (Seed)
+## 👤 Credenciais Iniciais de Demonstração (Seed & Vercel)
 
-O banco de dados conta com usuário pré-cadastrado via seed para testes locais imediatos:
+A aplicação conta com suporte nativo às credenciais de demonstração:
 - **E-mail:** `user@example.com`
 - **Senha:** `Password123!`
+
+### Comportamento por Ambiente:
+1. **Ambiente Local (Full-Stack):** Com o backend Docker ativo, a autenticação valida os dados no banco relacional **H2** e persiste as sessões com rate limiting no **Redis**.
+2. **Ambiente de Deploy Estático (Vercel):** Caso o backend externo não esteja conectado (ou retorne erro 405/rede), o frontend ativa de forma transparente o **Fallback de Autenticação Simulada (`mockAuth`)**. Você pode:
+   * Clicar no botão **"Preencher"** na tela de login para usar as credenciais seed (`user@example.com` / `Password123!`).
+   * Ou registrar uma conta nova na tela `/register`.
+   * O acesso ao **Dashboard** e ao **Catálogo de Produtos (DummyJSON)** é liberado imediatamente na URL pública.
+
