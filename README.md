@@ -2,7 +2,7 @@
 
 Aplicação completa de autenticação com separação de responsabilidades, arquitetura limpa, alta confiabilidade e segurança:
 - **Backend API:** Desenvolvida em **Node.js**, **Express.js**, **TypeScript**, **H2 Database** (Modo Server com emulação PostgreSQL) e **Redis** para gerenciamento de sessões e rate limiting em memória.
-- **Frontend SPA:** Desenvolvida em **React 18**, **TypeScript**, **Vite**, **Vanilla CSS Design System**, **Jest** e **React Testing Library**, com gerenciamento centralizado de sessão, validação em tempo real e rotas protegidas.
+- **Frontend SPA:** Desenvolvida em **React 18**, **TypeScript**, **Vite**, **Vanilla CSS Design System**, **Jest** e **React Testing Library**, com gerenciamento centralizado de sessão, validação em tempo real, rotas protegidas e **integração com API simulada externa (DummyJSON)** para consumo e exibição dinâmica de catálogo de produtos com busca, filtros e modal.
 
 ---
 
@@ -12,8 +12,10 @@ Aplicação completa de autenticação com separação de responsabilidades, arq
 - **Framework & UI:** [React](https://react.dev/) (v18) com [TypeScript](https://www.typescriptlang.org/) (v5)
 - **Build Tool & Bundler:** [Vite](https://vitejs.dev/) (v6)
 - **Roteamento SPA:** [React Router](https://reactrouter.com/) (v6) com rotas protegidas (`ProtectedRoute`)
-- **Comunicação HTTP:** [Axios](https://axios-http.com/) com interceptors de autenticação, injeção de Bearer Token e renovação automática de token
-- **Estilização:** Vanilla CSS moderno com Design System customizado (dark mode refinado, variáveis CSS, micro-animações, cards glassmorphic e responsividade mobile-first)
+- **Comunicação HTTP & APIs:**
+  - [Axios](https://axios-http.com/) para API de Autenticação segura com interceptors, Bearer Token em memória e auto-refresh
+  - Cliente HTTP isolado para a **API Simulada de Dummy Data** ([DummyJSON](https://dummyjson.com/)), com busca, paginação e categorias
+- **Estilização:** Vanilla CSS moderno com Design System customizado (dark mode refinado, variáveis CSS, micro-animações, cards glassmorphic, modal responsivo e responsividade mobile-first)
 - **Testes Automatizados:** [Jest](https://jestjs.io/) e [React Testing Library](https://testing-library.com/) com `jest-environment-jsdom` e `@testing-library/user-event`
 - **Deploy:** Pronto para [Vercel](https://vercel.com/) (`vercel.json`) e [Netlify](https://www.netlify.com/) (`netlify.toml` e `public/_redirects`)
 
@@ -52,18 +54,18 @@ auth-app/
 ├── docker-compose.yml        # Orquestração do Backend, H2 e Redis
 ├── frontend/                 # Aplicação Frontend React (Task 2)
 │   ├── src/
-│   │   ├── index.css         # Design tokens e base styles (Vanilla CSS)
+│   │   ├── index.css         # Design tokens, base styles, produtos e modal (Vanilla CSS)
 │   │   ├── App.tsx           # Setup do Router e AuthProvider
-│   │   ├── types/            # Modelos TypeScript compartilhados
-│   │   ├── services/         # Cliente Axios e camada de autenticação
+│   │   ├── types/            # Modelos TypeScript (auth.types.ts, product.types.ts)
+│   │   ├── services/         # Clientes HTTP (api.ts para Auth, dummyApi.ts e products.service.ts)
 │   │   ├── context/          # AuthContext e gerenciamento centralizado de sessão
 │   │   ├── hooks/            # Hook useAuth customizado
-│   │   ├── components/       # Componentes reutilizáveis (Navbar, Alert, Spinner, ProtectedRoute)
-│   │   ├── pages/            # Telas (LoginPage, RegisterPage, DashboardPage, NotFoundPage)
+│   │   ├── components/       # Componentes reutilizáveis (Navbar, Alert, Spinner, ProtectedRoute, ProductCard, ProductCatalog, ProductDetailModal)
+│   │   ├── pages/            # Telas (LoginPage, RegisterPage, DashboardPage com catálogo, NotFoundPage)
 │   │   └── tests/            # Testes unitários e de integração do Frontend (Jest + RTL)
 │   ├── vercel.json           # Configuração de SPA rewrites para Vercel
 │   ├── netlify.toml          # Configuração de SPA redirects para Netlify
-│   ├── vite.config.ts        # Configuração do Vite e proxy local
+│   ├── vite.config.ts        # Configuração do Vite, defines e proxy local
 │   ├── jest.config.cjs       # Configuração do Jest com ts-jest e jsdom
 │   └── package.json          # Dependências e scripts do frontend
 └── README.md                 # Documentação completa
@@ -108,6 +110,25 @@ auth-app/
 
 ---
 
+## 🛍️ Integração com API Simulada (Dummy Data)
+
+A aplicação consome a API pública externa **[DummyJSON](https://dummyjson.com/)** (`https://dummyjson.com/products`) em uma seção interativa no Dashboard do usuário autenticado:
+
+### 1. Arquitetura e Segurança da Conexão
+* **Isolamento de Clientes HTTP:** Um cliente Axios dedicado (`dummyApi.ts`) foi implementado com `baseURL` apontando para a DummyJSON, completamente separado do cliente de autenticação (`api.ts`).
+* **Proteção contra Vazamento de Credenciais:** O cliente da DummyJSON **não** injeta o `Authorization: Bearer <accessToken>` do usuário e não executa o fluxo de renovação de refresh token, garantindo que credenciais sensíveis nunca sejam transmitidas para servidores de terceiros.
+* **Configurabilidade:** O endpoint é configurável via `VITE_DUMMY_API_URL`, permitindo apontar para outros provedores ou mocks locais caso necessário.
+
+### 2. Recursos do Catálogo de Produtos
+* **Busca em Tempo Real com Debounce:** Campo de busca com debounce de 400ms (`GET /products/search?q={termo}`) para evitar requisições excessivas enquanto o usuário digita, acompanhado de botão para limpar o termo pesquisado.
+* **Filtro por Categorias Dinâmicas:** Consulta o endpoint `GET /products/categories` para popular um dropdown de categorias, filtrando os produtos por categoria específica (`GET /products/category/{categoria}`).
+* **Paginação Server-Side Simulada:** Controles de "Anterior" e "Próxima" com indicador dinâmico de itens exibidos e total de páginas disponíveis.
+* **Cards Ricos com Micro-Interações:** Imagens com fallback automático, badges de categoria e percentual de desconto, avaliação em estrelas (rating), preço original riscado e preço promocional em destaque.
+* **Modal de Detalhes:** Exibe galeria de imagens interativa, descrição completa, status e quantidade em estoque, marca, tags e classificação.
+* **Feedback Visual:** Estados de carregamento com *Spinner*, estado vazio amigável quando nenhum produto é encontrado e alerta com mensagem de erro caso a chamada de rede falhe.
+
+---
+
 ## ⚙️ Variáveis de Ambiente
 
 ### Backend (`.env` na raiz)
@@ -135,6 +156,9 @@ Configuração:
 # Em desenvolvimento local, o Vite encaminha '/api' para 'http://localhost:3000/api'
 # Em produção, configure com a URL do seu backend implantado:
 VITE_API_BASE_URL=/api
+
+# Base URL da API Simulada (Dummy Data):
+VITE_DUMMY_API_URL=https://dummyjson.com
 ```
 
 ---
@@ -191,7 +215,7 @@ npm run dev:frontend # Terminal 2 (Frontend na porta 5173)
 
 ## 🧪 Testes Automatizados
 
-O projeto conta com **51 testes automatizados** distribuídos entre Backend (Vitest) e Frontend (Jest + React Testing Library).
+O projeto conta com **61 testes automatizados** distribuídos entre Backend (Vitest) e Frontend (Jest + React Testing Library).
 
 ### 1. Executar TODOS os testes do projeto (Backend + Frontend):
 ```bash
@@ -234,7 +258,9 @@ npm run typecheck
 | `ProtectedRoute.test.tsx` | Unitário | `ProtectedRoute` | Estado de carregamento (*loading spinner*), redirecionamento de desautenticado para `/login`, renderização de rota protegida para autenticado. |
 | `useAuth.test.tsx` | Unitário | Hook `useAuth` e `AuthContext` | Exceção fora do provider, estado inicial, execução de login com persistência em sessionStorage, logout com limpeza de estado e chamada da API, restauração automática de sessão. |
 | `api.test.ts` | Unitário | `services/api.ts` | Gerenciamento de token em memória, persistência em sessionStorage, parsing de mensagens amigáveis de erro (rede, 401, 400, Zod, exceções genéricas). |
-| `auth-flow.test.tsx` | Integração | Fluxo Completo da Aplicação | Fluxo completo de Login -> Dashboard com dados do usuário -> Logout; Fluxo completo de Cadastro com validação -> Dashboard com dados salvos. |
+| `products.service.test.ts` | Unitário | `services/products.service.ts` | Listagem com paginação sem filtros, busca por termo (`/products/search`), filtro por categoria (`/products/category/{cat}`), normalização de categorias da DummyJSON e detalhes por ID (`/products/{id}`). |
+| `ProductCatalog.test.tsx` | Integração | `ProductCatalog` & `ProductDetailModal` | Renderização inicial com dados simulados e dropdown de categorias, abertura e fechamento de modal de detalhes, estado vazio amigável quando nenhum item coincide com a busca, tratamento de erro e filtro dinâmico por categoria. |
+| `auth-flow.test.tsx` | Integração | Fluxo Completo da Aplicação | Fluxo completo de Login -> Dashboard com dados do usuário e catálogo -> Logout; Fluxo completo de Cadastro com validação -> Dashboard com dados salvos. |
 
 ---
 

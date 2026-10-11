@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Spinner } from '../components/Spinner';
 import { Alert } from '../components/Alert';
+import { ProductCatalog } from '../components/ProductCatalog';
 
 export const DashboardPage: React.FC = () => {
   const { user, sessionId, refreshUser, logout } = useAuth();
@@ -112,6 +113,7 @@ export const DashboardPage: React.FC = () => {
           gap: '1rem',
           flexWrap: 'wrap',
           justifyContent: 'flex-end',
+          marginBottom: '2.5rem',
         }}
       >
         <button
@@ -140,6 +142,9 @@ export const DashboardPage: React.FC = () => {
           Encerrar Sessão
         </button>
       </div>
+
+      {/* Integração da API Simulada (Dummy Data) */}
+      <ProductCatalog />
     </div>
   );
 };

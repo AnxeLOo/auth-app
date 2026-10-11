@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   define: {
     'process.env.VITE_API_BASE_URL': JSON.stringify(process.env.VITE_API_BASE_URL || ''),
+    'process.env.VITE_DUMMY_API_URL': JSON.stringify(process.env.VITE_DUMMY_API_URL || ''),
   },
   server: {
     port: 5173,
