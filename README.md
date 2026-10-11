@@ -307,7 +307,8 @@ npx netlify deploy --prod
 ```
 
 ### URL Pública da Aplicação
-- **Ambiente de Produção (Deploy):** `https://auth-app-react-frontend.vercel.app` *(ou URL fornecida pela plataforma após deploy)*
+- **Ambiente de Produção (Vercel):** [https://frontend-three-fawn-80.vercel.app](https://frontend-three-fawn-80.vercel.app)
+
 
 ---
 
