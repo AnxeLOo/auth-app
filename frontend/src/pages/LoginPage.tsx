@@ -67,6 +67,30 @@ export const LoginPage: React.FC = () => {
         <p className="auth-subtitle">Informe suas credenciais para acessar sua conta</p>
       </div>
 
+      <div className="demo-credentials-banner" data-testid="demo-credentials-banner">
+        <div className="demo-credentials-header">
+          <span>💡 <strong>Acesso Demonstração (Seed)</strong></span>
+          <button
+            type="button"
+            className="btn-demo-autofill"
+            onClick={() => {
+              setEmail('user@example.com');
+              setPassword('Password123!');
+              if (errors.email || errors.password) {
+                setErrors({});
+              }
+            }}
+            data-testid="autofill-demo-btn"
+          >
+            Preencher
+          </button>
+        </div>
+        <div className="demo-credentials-body">
+          <span>E-mail: <code>user@example.com</code></span>
+          <span>Senha: <code>Password123!</code></span>
+        </div>
+      </div>
+
       <Alert type="error" message={apiError || ''} testId="login-error-alert" />
 
       <form onSubmit={handleSubmit} noValidate data-testid="login-form">
